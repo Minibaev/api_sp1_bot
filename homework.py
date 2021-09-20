@@ -56,7 +56,8 @@ def get_homeworks(current_timestamp):
 
 def send_message(message):
     current_timestamp = int(time.time())
-    message = get_homeworks(current_timestamp).get('homeworks')[0].get('reviewer_comment')
+    message = get_homeworks(
+        current_timestamp).get('homeworks')[0].get('reviewer_comment')
     return bot.send_message(CHAT_ID, message)
 
 
@@ -66,9 +67,11 @@ def main():
     logger.debug('Успешно')
     while True:
         try:
-            response_before = get_homeworks(current_timestamp).get('homeworks')[0]
+            response_before = get_homeworks(
+                current_timestamp).get('homeworks')[0]
             time.sleep(5 * 60)  # Опрашивать раз в пять минут
-            response_after = get_homeworks(current_timestamp).get('homeworks')[0]
+            response_after = get_homeworks(
+                current_timestamp).get('homeworks')[0]
             if response_after != response_before:
                 logger.info('Есть новости')
                 return parse_homework_status()
