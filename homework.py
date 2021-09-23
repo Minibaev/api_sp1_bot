@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+from requests import RequestException
 from telegram import Bot
 
 from dotenv import load_dotenv
@@ -35,12 +36,17 @@ logger.addHandler(handler)
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
-    if status and homework_name is None:
+    message = homework.get('reviewer_comment')
+    if (status and homework_name) is None:
         return 'Проверять нечего'
+    if status == 'reviewing':
+        return 'Работу взяли на проверку'
     if status == 'rejected':
         verdict = 'К сожалению, в работе нашлись ошибки.'
+        send_message(message)
     elif status == 'approved':
         verdict = 'Ревьюеру всё понравилось, работа зачтена!'
+        send_message(message)
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -50,9 +56,12 @@ def get_homeworks(current_timestamp):
     try:
         response = requests.get(
             URL, headers=headers, params=payload).json()
-    except Exception as error:
-        logging.error(f'Данные json не были получены, ошибка: {error}.')
-        raise
+    except ValueError:
+        logging.error('Некорректное значение аргумента.')
+        response = {}
+    except RequestException:
+        logging.error('Ошибка Request')
+        response = {}
     return response
 
 
@@ -66,13 +75,10 @@ def main():
     while True:
         try:
             homework = get_homeworks(current_timestamp).get('homeworks')
-            print(homework)
-            if homework != []:
-                message = homework[0].get('reviewer_comment')
-                send_message(message)
+            if homework:
+                logger.info('Есть новости')
+                parse_homework_status(homework)
             time.sleep(5 * 60)
-            logger.info('Есть новости')
-
         except Exception as error:
             logger.error(f'Бот упал с ошибкой: {error}')
             time.sleep(5)
