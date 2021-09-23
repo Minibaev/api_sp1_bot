@@ -36,33 +36,33 @@ logger.addHandler(handler)
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
-    message = homework.get('reviewer_comment')
-    if (status and homework_name) is None:
+    if homework_name is None:
+        return 'Проверять нечего'
+    if not status:
         return 'Проверять нечего'
     if status == 'reviewing':
         return 'Работу взяли на проверку'
     if status == 'rejected':
         verdict = 'К сожалению, в работе нашлись ошибки.'
-        send_message(message)
+        send_message(verdict)
     elif status == 'approved':
         verdict = 'Ревьюеру всё понравилось, работа зачтена!'
-        send_message(message)
+        send_message(verdict)
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homeworks(current_timestamp):
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     payload = {'from_date': current_timestamp}
+    response = {}
     try:
         response = requests.get(
-            URL, headers=headers, params=payload).json()
+            URL, headers=headers, params=payload)
     except ValueError:
         logging.error('Некорректное значение аргумента.')
-        response = {}
     except RequestException:
         logging.error('Ошибка Request')
-        response = {}
-    return response
+    return response.json()
 
 
 def send_message(message):
@@ -70,15 +70,16 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = 0  # int(time.time())
+    current_timestamp = int(time.time())
     logger.debug('Бот в работе')
     while True:
         try:
-            homework = get_homeworks(current_timestamp).get('homeworks')
+            homework = get_homeworks(current_timestamp).get('homeworks')[0]
             if homework:
                 logger.info('Есть новости')
                 parse_homework_status(homework)
             time.sleep(5 * 60)
+            current_timestamp = homework.get('current_date')
         except Exception as error:
             logger.error(f'Бот упал с ошибкой: {error}')
             time.sleep(5)
