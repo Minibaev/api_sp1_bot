@@ -36,33 +36,31 @@ logger.addHandler(handler)
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
-    if homework_name is None:
-        return 'Проверять нечего'
-    if not status:
+    if homework_name is None and status is None:
         return 'Проверять нечего'
     if status == 'reviewing':
         return 'Работу взяли на проверку'
     if status == 'rejected':
         verdict = 'К сожалению, в работе нашлись ошибки.'
-        send_message(verdict)
     elif status == 'approved':
         verdict = 'Ревьюеру всё понравилось, работа зачтена!'
-        send_message(verdict)
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homeworks(current_timestamp):
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
+    if current_timestamp is None:
+        current_timestamp = int(time.time())
     payload = {'from_date': current_timestamp}
     response = {}
     try:
         response = requests.get(
-            URL, headers=headers, params=payload)
+            URL, headers=headers, params=payload).json()
     except ValueError:
         logging.error('Некорректное значение аргумента.')
     except RequestException:
         logging.error('Ошибка Request')
-    return response.json()
+    return response
 
 
 def send_message(message):
@@ -74,10 +72,13 @@ def main():
     logger.debug('Бот в работе')
     while True:
         try:
-            homework = get_homeworks(current_timestamp).get('homeworks')[0]
-            if homework:
+            homework_list = get_homeworks(current_timestamp).get('homeworks')
+            if homework_list:
+                homework = homework_list[0]
                 logger.info('Есть новости')
                 parse_homework_status(homework)
+                message = parse_homework_status(homework)
+                send_message(message)
             time.sleep(5 * 60)
             current_timestamp = homework.get('current_date')
         except Exception as error:
