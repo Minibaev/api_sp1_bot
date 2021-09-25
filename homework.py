@@ -36,7 +36,7 @@ logger.addHandler(handler)
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
-    if homework_name is None and status is None:
+    if homework_name is None or status is None:
         return 'Проверять нечего'
     if status == 'reviewing':
         return 'Работу взяли на проверку'
@@ -76,7 +76,6 @@ def main():
             if homework_list:
                 homework = homework_list[0]
                 logger.info('Есть новости')
-                parse_homework_status(homework)
                 message = parse_homework_status(homework)
                 send_message(message)
             time.sleep(5 * 60)
