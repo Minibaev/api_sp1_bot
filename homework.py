@@ -17,7 +17,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 
-URL = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
+URL = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
@@ -68,7 +68,7 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = int(time.time())
+    current_timestamp = 0  # int(time.time())
     logger.debug('Бот в работе')
     while True:
         try:
