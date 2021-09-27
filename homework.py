@@ -68,7 +68,7 @@ def send_message(message):
 
 
 def main():
-    current_timestamp = 0  # int(time.time())
+    current_timestamp = int(time.time())
     logger.debug('Бот в работе')
     while True:
         try:
